@@ -30,7 +30,7 @@ The **CPX Monitoring Tool** is a command-line utility designed to provide visibi
 1. **Clone the Repository**:
    ```bash
    git clone https://github.com/am2308/cpx-monitor.git
-   cd cpx-monitor
+   cd cpx_monitor_tool
    ```
 
 2. **Create and Activate a Virtual Environment (Recommended)**:
