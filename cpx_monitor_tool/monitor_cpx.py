@@ -221,7 +221,7 @@ def main():
         monitor.print_service_averages()
     elif args.command == "flag":
         monitor.flag_underprovisioned_services()
-    elif args.command == "monitor":
+    elif args.command == "track":
         monitor.monitor_service(args.service)
 
 if __name__ == "__main__":
