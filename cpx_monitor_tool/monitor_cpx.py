@@ -76,7 +76,7 @@ class CPXMonitor:
         print("\nCurrent Services Status:")
         print(tabulate(table_data, headers=headers, tablefmt="grid"))
 
-    def print_service_averages(self):
+    def show_service_averages(self):
         """Print average CPU/Memory using tabulate"""
         if not self.servers:
             print("No servers found - please check CPX server connection")
@@ -139,26 +139,26 @@ class CPXMonitor:
                         instance['status'],
                         instance['cpu'],
                         instance['memory'],
-                        f"⚠️ Only {count} healthy" if count < 2 else "✅ OK"
+                        f"Only {count} healthy" if count < 2 else "OK"
                     ])
 
         if table_data:
             headers = ["Service", "IP", "Status", "CPU", "Memory", "Health Status"]
-            print("\n🚨 Underprovisioned Services (fewer than 2 healthy instances):")
+            print("\n Underprovisioned Services (fewer than 2 healthy instances):")
             print(tabulate(table_data, headers=headers, tablefmt="grid"))
         else:
-            print("\n✅ All services have at least 2 healthy instances")
+            print("\n All services have at least 2 healthy instances")
 
-    def monitor_service(self, service_name: str):
+    def track_service(self, service_name: str):
         """Monitor a specific service over time with tabulate"""
         if not self.servers:
             print("No servers found - please check CPX server connection")
             return
             
-        print(f"\n📊 Monitoring {service_name} (press Ctrl+C to stop)...\n")
+        print(f"\n Monitoring {service_name} (press Ctrl+C to stop)...\n")
         
         def signal_handler(sig, frame):
-            print("\n🛑 Monitoring stopped")
+            print("\n Monitoring stopped")
             sys.exit(0)
         
         signal.signal(signal.SIGINT, signal_handler)
@@ -170,7 +170,7 @@ class CPXMonitor:
                                    if stats['service'] == service_name]
                 
                 if not service_instances:
-                    print(f"❌ No instances found for service: {service_name}")
+                    print(f"No instances found for service: {service_name}")
                     break
                 
                 # Prepare data for tabulate
@@ -191,7 +191,7 @@ class CPXMonitor:
                 
                 time.sleep(5)
         except KeyboardInterrupt:
-            print("\n🛑 Monitoring stopped")
+            print("\n Monitoring stopped")
 
 def main():
     parser = argparse.ArgumentParser(description="CPX Monitoring Tool")
@@ -218,11 +218,11 @@ def main():
     if args.command == "list":
         monitor.print_services_table()
     elif args.command == "averages":
-        monitor.print_service_averages()
+        monitor.show_service_averages()
     elif args.command == "flag":
         monitor.flag_underprovisioned_services()
     elif args.command == "track":
-        monitor.monitor_service(args.service)
+        monitor.track_service(args.service)
 
 if __name__ == "__main__":
     main()
