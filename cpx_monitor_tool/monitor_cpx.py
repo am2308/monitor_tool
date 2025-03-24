@@ -208,8 +208,8 @@ def main():
     flag_parser = subparsers.add_parser("flag", help="Flag underprovisioned services")
 
     # Command 4: Monitor service
-    monitor_parser = subparsers.add_parser("monitor", help="Monitor a specific service")
-    monitor_parser.add_argument("service", help="Service name to monitor")
+    monitor_parser = subparsers.add_parser("track", help="Monitor a specific service")
+    monitor_parser.add_argument("--service", help="Service name to monitor")
 
     args = parser.parse_args()
 
