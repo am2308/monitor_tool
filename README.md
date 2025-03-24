@@ -98,11 +98,13 @@ The tool can be configured by modifying these aspects:
 ### Project Structure
 ```
 cpx-monitor/
-├── monitor_cpx.py      # Main application code
-├── cpx_server.py       # Provided mock server
-├── test_cpx_monitor.py # Unit tests
-├── requirements.txt    # Dependencies
-└── README.md           # Documentation
+├── monitor_cpx.py            # Main application code
+├── cpx_server.py             # Provided mock server
+├── test_cpx_monitor.py       # Unit tests
+├── requirements.txt          # Dependencies
+└── SlackNotification.jpeg    # Slack notification snapshot
+├── .env                      # Env Variables
+└── README.md                 # Documentation
 ```
 
 ### Dependencies
@@ -156,7 +158,7 @@ The provided `cpx_server.py` serves as:
 
 ---
 
-### Trade-offs Made:
+## Trade-offs Made:
 1. **Polling Interval**: Chose 5s for monitoring as a balance between:
    - API load (lower frequency)
    - Responsiveness (higher frequency)
@@ -172,6 +174,10 @@ The provided `cpx_server.py` serves as:
    - Built-in table formats
 
 ---
+
+## Creativity Done:
+1. **Slack Notification**: Integrated slack notification for unprovisioned services as part of "flag" command if fewer than 2 healthy instances monitored.
+2. **Auto Remediate**: Implemenetd auto remediation for underprovisioned services based upon cpu and memory threshold, As of now put dummy command but later-on can change with actual logic.
 
 ## Future Improvements
 
