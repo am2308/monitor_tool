@@ -73,7 +73,12 @@ python3 monitor_cpx.py --port 5008 flag
 
 #### **4. Monitor a Specific Service (Press Ctrl+C to Stop)**
 ```bash
-python3 monitor_cpx.py --port 8000 track --service <serviceName> #AuthService
+python3 monitor_cpx.py --port 5008 track --service <serviceName> #AuthService
+```
+
+#### **4. Dashboard View - Creativity
+```bash
+python3 monitor_cpx.py --port 5008 dashboard
 ```
 
 ### Command Options
@@ -105,6 +110,7 @@ cpx-monitor/
 └── SlackNotification.jpeg    # Slack notification snapshot
 ├── .env                      # Env Variables
 └── README.md                 # Documentation
+└── ProblemStatement.txt      # Problem Statement
 ```
 
 ### Dependencies
@@ -178,6 +184,7 @@ The provided `cpx_server.py` serves as:
 ## Creativity Done:
 1. **Slack Notification**: Integrated slack notification for unprovisioned services as part of "flag" command if fewer than 2 healthy instances monitored.
 2. **Auto Remediate**: Implemenetd auto remediation for underprovisioned services based upon cpu and memory threshold, As of now put dummy command but later-on can change with actual logic.
+3. **Real Time Terminal Dashboard**: Developed real time dashbaord for services health and active alerts. 
 
 ## Future Improvements
 

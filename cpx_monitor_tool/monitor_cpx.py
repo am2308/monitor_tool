@@ -15,6 +15,17 @@ import os
 import logging
 from logging.handlers import RotatingFileHandler
 
+### CPX Dashboard library imports
+from rich.console import Console
+from rich.table import Table
+from rich.live import Live
+from rich.layout import Layout
+from rich.panel import Panel
+from rich.text import Text
+import time
+
+
+
 # Load environment variables
 load_dotenv()
 
@@ -46,6 +57,118 @@ def setup_logging():
     return logging.getLogger(__name__)
 
 logger = setup_logging()
+
+### CPX Dashboard
+class TerminalDashboard:
+    def __init__(self, monitor):
+        self.monitor = monitor
+        self.console = Console()
+        logger.info("Dashboard initialized")
+
+    def _refresh_data(self):
+        """Force update monitor data"""
+        try:
+            self.monitor.update_all_stats()
+            return True
+        except Exception as e:
+            logger.error(f"Data refresh failed: {e}")
+            return False
+
+    def _create_stats_table(self):
+        """Generate service stats table"""
+        table = Table(title="Service Status")
+        table.add_column("Service")
+        table.add_column("Healthy", justify="right")
+        table.add_column("Avg CPU", justify="right")
+        table.add_column("Avg Memory", justify="right")
+        
+        if not self.monitor.server_stats:
+            table.add_row("[red]No data available[/]", "", "", "")
+            return table
+            
+        service_data = defaultdict(lambda: {'healthy': 0, 'cpu': 0, 'memory': 0, 'total': 0})
+        
+        for stats in self.monitor.server_stats.values():
+            service = stats['service']
+            service_data[service]['cpu'] += int(stats['cpu'][:-1])
+            service_data[service]['memory'] += int(stats['memory'][:-1])
+            service_data[service]['total'] += 1
+            if stats['status'] == 'Healthy':
+                service_data[service]['healthy'] += 1
+        
+        for service, data in service_data.items():
+            healthy_pct = (data['healthy'] / data['total']) * 100
+            table.add_row(
+                service,
+                f"[green]{data['healthy']}/{data['total']}[/]" if healthy_pct > 75 else 
+                f"[yellow]{data['healthy']}/{data['total']}[/]" if healthy_pct > 50 else 
+                f"[red]{data['healthy']}/{data['total']}[/]",
+                f"{data['cpu']/data['total']:.1f}%",
+                f"{data['memory']/data['total']:.1f}%"
+            )
+            
+        return table
+
+    def _create_alerts_panel(self):
+        """Generate alerts panel"""
+        if not self.monitor.server_stats:
+            return Panel("[yellow]Waiting for first data update...[/]", style="yellow")
+            
+        alerts = []
+        for ip, stats in self.monitor.server_stats.items():
+            if stats['status'] == 'Unhealthy':
+                alerts.append(
+                    f"[red]• {stats['service']} @ {ip}[/]\n"
+                    f"  CPU: {stats['cpu']} Memory: {stats['memory']}"
+                )
+        
+        if not alerts:
+            return Panel("No active alerts", style="green")
+        
+        return Panel("\n".join(alerts[:5]), title="Active Alerts", style="red")
+
+    def generate_dashboard(self):
+        """Create complete dashboard layout"""
+        layout = Layout()
+        layout.split(
+            Layout(name="header", size=3),
+            Layout(name="body")
+        )
+        
+        layout["header"].update(
+            Panel(f"[bold]CPX Monitoring[/] | Last update: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        )
+        
+        stats_table = self._create_stats_table()
+        alert_panel = self._create_alerts_panel()
+        
+        layout["body"].split_row(
+            Layout(stats_table, name="stats"),
+            Layout(alert_panel, name="alerts")
+        )
+        
+        return layout
+
+    def start_live_view(self):
+        """Run interactive dashboard"""
+        try:
+            with Live(self.generate_dashboard(), refresh_per_second=4, screen=True) as live:
+                while True:
+                    try:
+                        if not self._refresh_data():
+                            live.update(Panel("[red]Failed to update data[/]"))
+                        else:
+                            live.update(self.generate_dashboard())
+                        time.sleep(5)
+                    except KeyboardInterrupt:
+                        logger.info("Dashboard stopped by user")
+                        break
+                    except Exception as e:
+                        logger.error(f"Live update error: {e}")
+                        time.sleep(5)
+        except Exception as e:
+            logger.critical(f"Dashboard failed: {e}")
+            raise
 
 class CPXMonitor:
     def __init__(self, base_url: str):
@@ -261,7 +384,6 @@ class CPXMonitor:
         if not self.servers:
             logger.error("No servers found - please check CPX server connection")
             return
-            
         self.update_all_stats()
 
         # Prepare data for tabulate
@@ -335,7 +457,7 @@ class CPXMonitor:
         # Prepare data for tabulate
         table_data = []
         for service, count in healthy_counts.items():
-            if count < 8:
+            if count < 2:
                 instances = service_instances[service]
                 for instance in instances:
                     table_data.append([
@@ -344,7 +466,7 @@ class CPXMonitor:
                         instance['status'],
                         instance['cpu'],
                         instance['memory'],
-                        f"Only {count} healthy" if count < 8 else "OK"
+                        f"Only {count} healthy" if count < 2 else "OK"
                     ])
 
         if table_data:
@@ -425,6 +547,9 @@ def main():
     monitor_parser = subparsers.add_parser("track", help="Monitor a specific service")
     monitor_parser.add_argument("--service", help="Service name to monitor")
 
+    # Command 5: Dashboard Service
+    dashboard_parser = subparsers.add_parser("dashboard", help="Dashboard view")
+
     args = parser.parse_args()
 
     logger.info(f"Starting CPXMonitor with command: {args.command}")
@@ -436,6 +561,10 @@ def main():
         monitor.show_service_averages()
     elif args.command == "flag":
         monitor.flag_underprovisioned_services()
+    elif args.command == "dashboard":
+        # Clear terminal and start dashboard
+        os.system('cls' if os.name == 'nt' else 'clear')
+        TerminalDashboard(monitor).start_live_view()
     elif args.command == "track":
         if not args.service:
             logger.error("Service name not provided for track command")
