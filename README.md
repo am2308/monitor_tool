@@ -179,9 +179,8 @@ The provided `cpx_server.py` serves as:
    - Handles edge cases (long service names)
    - Built-in table formats
 
----
 
-### Creativity Done:
+### Creativity Done:
 1. **Slack Notification**: Integrated slack notification for unprovisioned services as part of "flag" command if fewer than 2 healthy instances monitored.
 2. **Auto Remediate**: Implemenetd auto remediation for underprovisioned services based upon cpu and memory threshold, As of now put dummy command but later-on can change with actual logic.
 3. **Real Time Terminal Dashboard**: Developed real time dashbaord for services health and active alerts. 
